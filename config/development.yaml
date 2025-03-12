@@ -1,0 +1,7 @@
+routes:
+  - name: user_service
+    context: /api/v1/user
+    target: http://localhost:8080
+  - name: auth_service
+    context: /auth
+    target: http://localhost:8080
