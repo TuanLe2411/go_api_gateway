@@ -3,7 +3,9 @@ package middleware
 import (
 	"api_gateway/pkg/constant"
 	"api_gateway/pkg/utils"
+	"fmt"
 	"net/http"
+	"strings"
 )
 
 type JwtMiddleware struct {
@@ -18,6 +20,10 @@ func NewJwtMiddleware(jwt *utils.Jwt) constant.Middleware {
 
 func (j *JwtMiddleware) Do(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if j.isIgnoredPath(r.URL.Path) {
+			next.ServeHTTP(w, r)
+			return
+		}
 		token := r.Header.Get("Authorization")
 		if token == "" {
 			utils.SetHttpReponseError(r, utils.ErrUnAuthorized)
@@ -30,7 +36,18 @@ func (j *JwtMiddleware) Do(next http.Handler) http.Handler {
 			return
 		}
 
-		r.Header.Set("user_id", claims.UserId)
+		r.Header.Set("user_id", fmt.Sprintf("%d", claims.UserId))
+		r.Header.Set("role", claims.Username)
 		next.ServeHTTP(w, r)
 	})
+}
+
+func (j *JwtMiddleware) isIgnoredPath(path string) bool {
+	IgnoredPath := []string{"/auth"}
+	for _, p := range IgnoredPath {
+		if strings.HasPrefix(path, p) {
+			return true
+		}
+	}
+	return false
 }

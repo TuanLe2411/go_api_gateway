@@ -1,5 +1,10 @@
 FROM golang:1.24.0-alpine AS builder
 
+ENV GO111MODULE=on \
+    CGO_ENABLED=0 \
+    GOOS=linux \
+    GOARCH=arm64
+
 # Install necessary build tools
 RUN apk add --no-cache git ca-certificates tzdata && \
     update-ca-certificates
@@ -15,7 +20,7 @@ RUN go mod download
 COPY . .
 
 # Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o api_gateway cmd/main/main.go
+RUN go build -ldflags="-s -w" -o api_gateway cmd/main/main.go
 
 # Create a minimal production image
 FROM alpine:3.14 AS final
@@ -30,6 +35,10 @@ WORKDIR /app
 # Copy binary from builder stage
 COPY --from=builder /app/api_gateway .
 
+COPY .env.* ./
+
+COPY config/ ./config/
+
 # Use non-root user for better security
 USER appuser
 
@@ -43,4 +52,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
   CMD wget -qO- http://localhost:8000/health || exit 1
 
 # Command to run the application
-CMD ["./api_gateway"]
+ENTRYPOINT ["./api_gateway"]

@@ -14,8 +14,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-const apiPrefix = "/api"
-
 func Run() {
 	routes, err := pkg.LoadConfig()
 	if err != nil {
@@ -37,12 +35,8 @@ func Run() {
 	router.Use(
 		middleware.XssProtectionMiddleware,
 		middleware.CorsMiddleware,
-		middleware.ErrorHandlerMiddleware,
-	)
-
-	baseRouter := router.PathPrefix(apiPrefix).Subrouter()
-	baseRouter.Use(
 		middleware.NewJwtMiddleware(jwt).Do,
+		middleware.ErrorHandlerMiddleware,
 	)
 
 	for _, route := range routes.Routes {
@@ -52,6 +46,7 @@ func Run() {
 		}
 		handler := middleware.ProxyMiddleware(proxy)
 		router.Handle(route.Context+"/{.*}", handler).Methods("GET", "POST", "PUT", "DELETE")
+		router.Handle(route.Context, handler).Methods("GET", "POST", "PUT", "DELETE")
 	}
 
 	appController := app_controller.AppController{}

@@ -33,10 +33,17 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
     - name: Build and Push Docker Image
       uses: docker/build-push-action@v5
       with:
         context: .
         push: true
-        tags: ${{ secrets.DOCKER_USERNAME }}/api_gateway:${{ github.sha }}
-
+        tags: ${{ secrets.DOCKER_USERNAME }}/api_gateway:latest
+        platforms: linux/arm64,linux/amd64
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        build-args: |
+          GOPROXY=direct

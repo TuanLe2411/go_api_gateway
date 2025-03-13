@@ -1,10 +1,10 @@
 routes:
   - name: user_service
     context: /api/v1/users
-    target: http://localhost:8080
+    target: http://user_service:8080
   - name: auth_service
     context: /auth
-    target: http://localhost:8080
+    target: http://user_service:8080
   - name: flashcard_service
     context: /api/v1/category
-    target: http:/localhost:9090
+    target: http://flashcard_service:9090
