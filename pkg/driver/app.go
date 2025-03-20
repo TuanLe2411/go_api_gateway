@@ -1,12 +1,16 @@
 package driver
 
 import (
+	"api_gateway/internal/app_log"
 	"api_gateway/internal/drivers/app_controller"
 	"api_gateway/internal/middleware"
 	"api_gateway/pkg"
 	"api_gateway/pkg/constant"
 	"api_gateway/pkg/utils"
-	"log"
+	"fmt"
+
+	"github.com/rs/zerolog/log"
+
 	"net/http"
 	"os"
 	"strconv"
@@ -16,8 +20,9 @@ import (
 
 func Run() {
 	routes, err := pkg.LoadConfig()
+	app_log.InitLogger()
 	if err != nil {
-		log.Fatalf("Failed to load config: %v", err)
+		log.Fatal().Str("error", "Failed to load config: "+err.Error()).Msg("")
 	}
 
 	jwtAccessTokenTtl, _ := strconv.Atoi(os.Getenv("JWT_ACCESS_TOKEN_TTL_S"))
@@ -42,7 +47,7 @@ func Run() {
 	for _, route := range routes.Routes {
 		proxy, err := utils.NewProxy(route.Target)
 		if err != nil {
-			log.Fatalf("Failed to create proxy for %s: %v", route.Name, err)
+			log.Fatal().Str("error", fmt.Sprintf("Failed to create proxy for %s: %v", route.Name, err))
 		}
 		handler := middleware.ProxyMiddleware(proxy)
 		router.Handle(route.Context+"/{.*}", handler).Methods("GET", "POST", "PUT", "DELETE")
@@ -52,6 +57,6 @@ func Run() {
 	appController := app_controller.AppController{}
 	router.HandleFunc("/health", appController.HealthCheck).Methods(constant.GetMethod)
 
-	log.Println("Server is running on port: " + os.Getenv("SERVER_PORT"))
+	log.Info().Msg("Server is running on port: " + os.Getenv("SERVER_PORT"))
 	http.ListenAndServe(":"+os.Getenv("SERVER_PORT"), router)
 }

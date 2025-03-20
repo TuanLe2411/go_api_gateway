@@ -26,8 +26,13 @@ RUN go build -ldflags="-s -w" -o api_gateway cmd/main/main.go
 FROM alpine:3.14 AS final
 
 # Add necessary runtime packages and security configurations
-RUN apk add --no-cache ca-certificates tzdata && \
-    addgroup -S appgroup && adduser -S appuser -G appgroup
+RUN apk add --no-cache ca-certificates tzdata curl && \
+    addgroup -S appgroup && adduser -S appuser -G appgroup && \
+    mkdir -p /app/log && chown appuser:appgroup /app/log && chmod 777 /app/log
+
+# Set the timezone to Asia/Ho_Chi_Minh
+ENV TZ=Asia/Ho_Chi_Minh
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Set working directory
 WORKDIR /app
