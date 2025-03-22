@@ -2,9 +2,8 @@ FROM golang:1.24.0-alpine AS builder
 
 ENV GO111MODULE=on \
     CGO_ENABLED=0 \
-    GOOS=linux \
-    GOARCH=arm64
-
+    GOOS=linux
+    
 # Install necessary build tools
 RUN apk add --no-cache git ca-certificates tzdata && \
     update-ca-certificates

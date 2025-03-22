@@ -43,7 +43,7 @@ func (j *JwtMiddleware) Do(next http.Handler) http.Handler {
 }
 
 func (j *JwtMiddleware) isIgnoredPath(path string) bool {
-	IgnoredPath := []string{"/auth"}
+	IgnoredPath := []string{"/auth", "/health"}
 	for _, p := range IgnoredPath {
 		if strings.HasPrefix(path, p) {
 			return true
